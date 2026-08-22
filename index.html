@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LB Livewell — Physics preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,350;0,9..144,500;1,9..144,350&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: oklch(0.978 0.01 88);
+    --paper-deep: oklch(0.944 0.018 86);
+    --primary: oklch(0.318 0.049 155);
+    --primary-fg: oklch(0.975 0.012 88);
+    --clay: oklch(0.598 0.107 44);
+    --rule: oklch(0.848 0.021 100);
+    --ink: oklch(0.24 0.03 155);
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;overflow-x:clip}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Work Sans",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:clip;
+  }
+  ::selection{background:var(--clay);color:#fff}
+
+  .noise{
+    position:fixed;inset:0;z-index:40;pointer-events:none;opacity:.05;
+    mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:180px;
+  }
+  .progress{
+    position:fixed;top:0;left:0;height:2px;width:0;z-index:80;
+    background:linear-gradient(90deg,var(--clay),var(--primary));
+  }
+
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:70;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1.35rem 2rem;transition:padding .5s var(--ease),background .5s var(--ease);
+  }
+  header.scrolled{
+    padding:.85rem 2rem;
+    background:color-mix(in oklab,var(--paper) 78%,transparent);
+    backdrop-filter:blur(18px) saturate(1.3);
+    border-bottom:1px solid color-mix(in oklab,var(--rule) 55%,transparent);
+  }
+  .brand{font-family:Fraunces,serif;font-size:1.45rem;font-weight:350;color:var(--primary);letter-spacing:-.02em;text-decoration:none}
+  nav.desk-nav{display:none;gap:1.6rem;align-items:center}
+  .waffle{display:flex}
+  nav a{color:var(--ink);text-decoration:none;font-size:.8rem;letter-spacing:.04em;opacity:.7}
+  nav a:hover{opacity:1}
+  .cta{
+    display:inline-flex;align-items:center;gap:.45rem;
+    background:var(--primary);color:var(--primary-fg);
+    padding:.72rem 1.25rem;border-radius:2px;text-decoration:none;font-size:.78rem;
+    letter-spacing:.03em;will-change:transform;
+  }
+  .waffle{
+    display:flex;width:44px;height:44px;border:0;background:none;padding:0;
+    align-items:center;justify-content:center;cursor:pointer;position:relative;z-index:90;
+    flex:0 0 44px;
+  }
+  .waffle i,.waffle i::before,.waffle i::after{
+    display:block;width:18px;height:1.5px;background:var(--primary);border-radius:2px;
+    transition:transform .5s var(--ease),opacity .35s var(--ease);
+  }
+  .waffle i{position:relative}
+  .waffle i::before,.waffle i::after{content:"";position:absolute;left:0}
+  .waffle i::before{top:-6px}
+  .waffle i::after{top:6px}
+  body.menu-open .waffle i{background:transparent}
+  body.menu-open .waffle i::before{top:0;transform:rotate(45deg)}
+  body.menu-open .waffle i::after{top:0;transform:rotate(-45deg)}
+  .scrim{
+    position:fixed;inset:0;background:color-mix(in oklab,var(--ink) 28%,transparent);
+    opacity:0;pointer-events:none;z-index:75;transition:opacity .45s var(--ease);
+  }
+  body.menu-open .scrim{opacity:1;pointer-events:auto}
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:min(86vw,360px);
+    background:var(--paper);z-index:80;padding:5.4rem 1.6rem 2rem;
+    transform:translate3d(104%,0,0);transition:transform .55s var(--ease);
+    box-shadow:-24px 0 60px -36px oklch(0.24 0.03 155 / .45);
+    display:flex;flex-direction:column;gap:1.15rem;
+  }
+  body.menu-open .drawer{transform:none}
+  .drawer a{color:var(--primary);text-decoration:none;font-family:Fraunces,serif;font-size:1.55rem;font-weight:350}
+  .drawer .cta{margin-top:1.2rem;align-self:flex-start;font-family:"Work Sans",sans-serif;font-size:.8rem}
+
+  .hero{
+    min-height:100svh;max-width:1240px;margin:0 auto;
+    display:grid;grid-template-columns:.92fr 1.08fr;gap:3.2rem;align-items:center;
+    padding:7.2rem 2rem 3rem;
+  }
+  .eyebrow{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--clay);
+    opacity:0;transform:translateY(16px);animation:rise .85s var(--ease) .08s forwards}
+  h1{
+    font-family:Fraunces,serif;font-weight:350;letter-spacing:-.032em;line-height:1.02;
+    font-size:clamp(2.7rem,7.4vw,5.4rem);color:var(--primary);margin-top:1.1rem;text-wrap:balance;
+    opacity:0;transform:translateY(22px);animation:rise .95s var(--ease) .22s forwards;
+  }
+  h1 em{font-style:italic;color:var(--clay);font-weight:350;position:relative}
+  h1 em::after{
+    content:"";position:absolute;left:0;bottom:.06em;height:.12em;width:0;
+    background:color-mix(in oklab,var(--clay) 26%,transparent);
+    animation:underline .8s var(--ease) 1.05s forwards;
+  }
+  .lede{
+    margin-top:1.4rem;font-family:Fraunces,serif;font-size:clamp(1.25rem,2.4vw,1.7rem);
+    line-height:1.35;color:color-mix(in oklab,var(--primary) 86%,transparent);max-width:28rem;
+    opacity:0;transform:translateY(18px);animation:rise .9s var(--ease) .55s forwards;
+  }
+  .body{margin-top:1rem;max-width:32rem;line-height:1.7;font-size:.98rem;
+    opacity:0;transform:translateY(18px);animation:rise .9s var(--ease) .72s forwards}
+  .hero-actions{margin-top:2rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;
+    opacity:0;transform:translateY(20px);animation:rise .9s var(--ease) .9s forwards}
+  .actions{margin-top:2rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:center}
+  .btn{
+    display:inline-flex;align-items:center;gap:.5rem;
+    background:var(--clay);color:#fff;padding:1.05rem 1.7rem;border-radius:2px;
+    text-decoration:none;font-size:.88rem;will-change:transform;
+  }
+  .btn .arrow{transition:transform .4s var(--ease)}
+  .btn:hover .arrow{transform:translateX(5px)}
+  .ghost{color:var(--ink);opacity:.7;text-decoration:none;border-bottom:1px solid var(--rule);padding-bottom:.25rem;font-size:.9rem}
+  .cred{margin-top:2.2rem;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;max-width:28rem;
+    opacity:0;animation:rise .9s var(--ease) 1.12s forwards;line-height:1.55}
+  .visual{position:relative;min-height:72vh}
+  .frame{position:absolute;top:-1.1rem;right:-1.1rem;width:58%;height:58%;border:1px solid color-mix(in oklab,var(--clay) 45%,transparent)}
+  .portrait-wrap{position:absolute;inset:0;overflow:hidden;border-radius:2px}
+  .portrait-wrap img{
+    width:100%;height:120%;object-fit:cover;object-position:72% 18%;
+    display:block;will-change:transform;
+  }
+  .chip{
+    position:absolute;z-index:3;padding:.65rem 1rem;border-radius:999px;
+    background:color-mix(in oklab,var(--paper) 86%,transparent);
+    border:1px solid var(--rule);backdrop-filter:blur(12px);font-size:.76rem;
+    box-shadow:0 16px 36px -22px oklch(0.3 0.04 155 / .45);
+    animation:float 6s ease-in-out infinite;
+  }
+  .chip b{color:var(--primary)}
+  .chip-a{top:12%;right:12px}
+  .chip-b{bottom:16%;left:12px;animation-delay:1.4s}
+
+  .trust{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border-block:1px solid var(--rule);background:var(--paper-deep);
+  }
+  .trust span{
+    padding:1.35rem 1rem;text-align:center;font-size:.66rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--primary);opacity:.78;
+    border-right:1px solid color-mix(in oklab,var(--rule) 60%,transparent);
+  }
+  .trust span:last-child{border-right:none}
+
+  section{max-width:1180px;margin:0 auto;padding:6.5rem 2rem}
+  .sec-k{font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--clay)}
+  .sec-h{
+    font-family:Fraunces,serif;font-weight:350;letter-spacing:-.025em;line-height:1.08;
+    font-size:clamp(2rem,4.2vw,3.3rem);color:var(--primary);margin-top:.85rem;text-wrap:balance;
+  }
+  .sec-p{margin-top:1rem;max-width:36rem;line-height:1.7;opacity:.8}
+
+  .lift{opacity:0;transform:translate3d(0,48px,0);transition:opacity .95s var(--ease),transform .95s var(--ease)}
+  .lift.is-in{opacity:1;transform:none}
+  .d1{transition-delay:.12s}
+  .d2{transition-delay:.24s}
+  .d3{transition-delay:.36s}
+  .d4{transition-delay:.48s}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2.6rem}
+  .card{
+    border:1px solid var(--rule);padding:1.8rem;background:var(--paper);border-radius:3px;
+    transition:transform .5s var(--ease),box-shadow .5s var(--ease),border-color .5s var(--ease);
+    position:relative;overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--clay);
+    transform:scaleY(0);transform-origin:bottom;transition:transform .5s var(--ease);
+  }
+  .card:hover{transform:translateY(-7px);box-shadow:0 28px 50px -32px oklch(0.3 0.04 155 / .4);
+    border-color:color-mix(in oklab,var(--clay) 35%,var(--rule))}
+  .card:hover::before{transform:scaleY(1)}
+  .card h3{font-family:Fraunces,serif;font-weight:350;font-size:1.35rem;color:var(--primary)}
+  .card p{margin-top:.65rem;line-height:1.65;opacity:.75;font-size:.93rem}
+
+  .about{display:grid;grid-template-columns:1.05fr .95fr;gap:3.5rem;align-items:center}
+  .about-photo{
+    min-height:520px;border-radius:2px;position:relative;overflow:hidden;
+  }
+  .about-photo img{width:100%;height:100%;min-height:520px;object-fit:cover;object-position:78% 18%;display:block}
+  .quote{
+    margin-top:1.8rem;font-family:Fraunces,serif;font-size:clamp(1.35rem,2.4vw,1.85rem);
+    line-height:1.35;color:var(--primary);font-style:italic;
+  }
+  .quote::before{content:"“";color:var(--clay);font-size:2.4rem;display:block;line-height:.7;margin-bottom:.4rem}
+
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2.6rem}
+  .step{border:1px solid var(--rule);padding:1.8rem;position:relative;overflow:hidden;
+    transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+  .step:hover{transform:translateY(-6px);box-shadow:0 30px 60px -30px oklch(0.3 0.04 155 / .3)}
+  .step .n{font-family:Fraunces,serif;font-size:2.4rem;color:color-mix(in oklab,var(--clay) 55%,transparent)}
+  .step h3{font-family:Fraunces,serif;font-weight:350;font-size:1.3rem;color:var(--primary);margin-top:.8rem}
+  .step p{margin-top:.6rem;line-height:1.65;opacity:.75;font-size:.92rem}
+  .step::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--clay);transition:width .6s var(--ease)}
+  .step:hover::after{width:100%}
+
+  .stats-band{
+    max-width:none;width:100vw;margin-left:calc(50% - 50vw);margin-right:0;
+    background:var(--primary);color:var(--primary-fg);
+    padding:6.8rem 2rem;position:relative;overflow:hidden;
+  }
+  .stats-band::before{
+    content:"";position:absolute;inset:-20%;
+    background:radial-gradient(50% 60% at 70% 20%, color-mix(in oklab,var(--clay) 22%,transparent), transparent 62%);
+    pointer-events:none;
+  }
+  .stats-inner{max-width:1180px;margin:0 auto;position:relative}
+  .stats-band .sec-k{color:color-mix(in oklab,var(--clay) 70%,white)}
+  .stats-band .sec-h{color:var(--primary-fg);max-width:18ch}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4rem;margin-top:3.2rem}
+  .stat{text-align:left;padding:0;background:none;border:0;cursor:default;will-change:transform}
+  .stat b{
+    display:block;font-family:Fraunces,serif;font-weight:350;letter-spacing:-.03em;line-height:.9;
+    font-size:clamp(3.8rem,7.2vw,6rem);color:var(--primary-fg);
+    transform-origin:left bottom;
+  }
+  .stat.is-in b{animation:numPop 1.15s cubic-bezier(.16,1,.3,1) both}
+  .stat.is-settled b{animation:numFloat 5.5s ease-in-out infinite}
+  .stat span{
+    display:block;margin-top:.85rem;max-width:16rem;
+    font-size:.78rem;letter-spacing:.04em;line-height:1.45;
+    color:color-mix(in oklab,var(--primary-fg) 72%,transparent);text-transform:none;
+  }
+  @keyframes numPop{
+    0%{transform:scale(.62) translateY(28px);opacity:0}
+    58%{transform:scale(1.08) translateY(-6px);opacity:1}
+    100%{transform:scale(1) translateY(0);opacity:1}
+  }
+  @keyframes numFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+  .quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2.6rem}
+  .t-card{border:1px solid var(--rule);padding:2rem;background:var(--paper);border-radius:3px;
+    transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+  .t-card:hover{transform:translateY(-6px);box-shadow:0 30px 60px -30px oklch(0.3 0.04 155 / .3)}
+  .t-card .q{font-family:Fraunces,serif;font-size:1.15rem;line-height:1.5;color:var(--primary)}
+  .t-card .a{margin-top:1.1rem;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;opacity:.5}
+
+  @keyframes rise{to{opacity:1;transform:none}}
+  @keyframes heroIn{to{opacity:1;transform:none}}
+  @keyframes underline{to{width:100%}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+  .faq-item{border-bottom:1px solid var(--rule)}
+  .faq-item:first-child{border-top:1px solid var(--rule)}
+  .faq-q{
+    width:100%;background:none;border:0;display:flex;justify-content:space-between;gap:1rem;
+    padding:1.4rem 0;font-family:Fraunces,serif;font-size:1.2rem;color:var(--primary);text-align:left;cursor:pointer;
+  }
+  .faq-q i{font-style:normal;color:var(--clay);transition:transform .5s var(--ease)}
+  .faq-item.open .faq-q i{transform:rotate(45deg)}
+  .faq-a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .55s var(--ease)}
+  .faq-item.open .faq-a{grid-template-rows:1fr}
+  .faq-a > div{overflow:hidden}
+  .faq-a p{padding:0 0 1.35rem;line-height:1.7;opacity:.8}
+
+  .final{text-align:center;position:relative;overflow:hidden;padding-block:8rem}
+  .ghost-lb{
+    position:absolute;right:-4%;bottom:-18%;font-family:Fraunces,serif;font-size:18rem;
+    color:var(--primary);opacity:.05;pointer-events:none;line-height:.8;
+  }
+  footer{border-top:1px solid var(--rule);background:var(--paper-deep);padding:2.4rem 2rem;text-align:center}
+  footer p{max-width:46rem;margin:0 auto;font-size:.76rem;line-height:1.7;opacity:.62}
+
+  @media (min-width:901px){
+    nav.desk-nav{display:flex}
+    .waffle{display:none}
+  }
+  @media (max-width:900px){
+    .hero,.about,.grid2,.steps,.stats,.trust,.quotes{grid-template-columns:1fr}
+    .stats-band{padding:4.8rem 1.25rem}
+    .hero{padding-top:6.2rem;gap:2rem}
+    .visual{order:-1;min-height:58vh}
+    .chip-a,.chip-b{left:12px;right:auto}
+    .chip-b{bottom:12px}
+    .hero-actions{flex-direction:column;align-items:flex-start}
+    .cred{max-width:100%;white-space:normal;line-height:1.55}
+    .btn{max-width:100%}
+    section{padding:4.4rem 1.25rem}
+    header{padding:1.1rem 1.1rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .lift,.faq-a,.card,.btn,.cta,.eyebrow,h1,.lede,.body,.actions,.cred,.visual,.chip,.stat b{animation:none !important;transition:none !important}
+    .lift,.eyebrow,h1,.lede,.body,.actions,.cred,.visual{opacity:1;transform:none}
+    h1 em::after{width:100%}
+  }
+</style>
+<noscript><style>.lift,.eyebrow,h1,.lede,.body,.hero-actions,.cred,.visual{opacity:1!important;transform:none!important;animation:none!important}</style></noscript>
+</head>
+<body>
+<div class="noise" aria-hidden="true"></div>
+<div class="progress" id="progress"></div>
+
+<header id="header">
+  <a class="brand" href="#top">LB Livewell</a>
+  <nav class="desk-nav">
+    <a href="#help">How coaching helps</a>
+    <a href="#about">About Lisa</a>
+    <a href="#how">How it works</a>
+    <a class="cta mag" href="#contact">Book a Free Discovery Call</a>
+  </nav>
+  <button class="waffle" id="waffle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+    <i></i>
+  </button>
+</header>
+<div class="scrim" id="scrim"></div>
+<nav class="drawer" id="drawer" aria-hidden="true">
+  <a href="#help">How coaching helps</a>
+  <a href="#about">About Lisa</a>
+  <a href="#how">How it works</a>
+  <a href="#stats">Why it matters</a>
+  <a href="#words">In their words</a>
+  <a class="cta" href="#contact">Book a Free Discovery Call</a>
+</nav>
+
+<section class="hero" id="top">
+  <div>
+    <p class="eyebrow">Personal health &amp; wellbeing coaching</p>
+    <h1>I’m <em>Lisa</em>. I help you feel like yourself again.</h1>
+    <p class="lede">A Health &amp; Wellbeing Coach and Registered Nurse.</p>
+    <p class="body">With more than 20 years of NHS experience, I offer a confidential space to pause, gain clarity, and make changes that fit real life.</p>
+    <div class="hero-actions">
+      <a class="btn mag" href="#contact">Book a Free Discovery Call <span class="arrow">→</span></a>
+      <a class="ghost" href="#help">How coaching can help</a>
+    </div>
+    <p class="cred">Qualified coach · NMC Registered Nurse · 20+ years’ NHS experience</p>
+  </div>
+  <div class="visual">
+    <div class="frame" aria-hidden="true"></div>
+    <div class="portrait-wrap" id="portrait">
+      <img src="lisa-hero.jpg" alt="Lisa, health and wellbeing coach" width="1182" height="1477">
+    </div>
+    <div class="chip chip-b"><b>Confidential</b> · client-led</div>
+  </div>
+</section>
+
+<div class="trust">
+  <span>Qualified Health &amp; Wellbeing Coach</span>
+  <span>NMC Registered Nurse</span>
+  <span>20+ Years’ NHS Experience</span>
+  <span>Online sessions across the UK</span>
+</div>
+
+<section id="help">
+  <p class="sec-k lift">You may be here because…</p>
+  <h2 class="sec-h lift d1">Something has been sitting with you for a while.</h2>
+  <p class="sec-p lift d2">Most people arrive not with a neat problem, but with a feeling that life has become harder to carry than it should be.</p>
+  <div class="grid2">
+    <article class="card lift"><h3>You feel overwhelmed</h3><p>Everything is urgent, nothing feels finished, and you would like somewhere quiet to think clearly again.</p></article>
+    <article class="card lift d1"><h3>You have lost momentum</h3><p>You used to feel more like yourself. You want your footing back — without being told to try harder.</p></article>
+    <article class="card lift d2"><h3>You want routines that stick</h3><p>Not a rigid plan you abandon in a fortnight. Habits shaped around your real week.</p></article>
+    <article class="card lift d3"><h3>You are navigating change</h3><p>A new role, a shift at home, a health event, a season of caring. Change asks a lot, often quietly.</p></article>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div>
+    <p class="sec-k lift">About Lisa</p>
+    <h2 class="sec-h lift d1">Twenty years in healthcare taught me where change really begins.</h2>
+    <p class="sec-p lift d2">I have spent more than two decades as a nurse in the NHS. I saw again and again how much of our health sits outside a clinic room — in sleep, work, pressure, confidence, and the small daily patterns that quietly shape everything else.</p>
+    <p class="sec-p lift d3">What people needed most was rarely more information. It was time, attention, and someone genuinely on their side.</p>
+    <p class="quote lift d3">You do not need to have everything worked out before beginning.</p>
+  </div>
+  <div class="about-photo lift">
+    <img src="lisa-about.jpg" alt="Lisa outdoors" width="1087" height="1358">
+  </div>
+</section>
+
+<section id="how">
+  <p class="sec-k lift">How it works</p>
+  <h2 class="sec-h lift d1">A calm path. It starts with a conversation.</h2>
+  <div class="steps">
+    <article class="step lift"><div class="n">01</div><h3>Free discovery call</h3><p>A confidential 30 minutes. We talk about what is going on and whether coaching feels right. No pressure to continue.</p></article>
+    <article class="step lift d1"><div class="n">02</div><h3>One-to-one coaching</h3><p>Online sessions at your pace. You set the direction. I help you think it through, then we agree small steps that fit.</p></article>
+    <article class="step lift d2"><div class="n">03</div><h3>Progress that holds</h3><p>Changes that last because they are yours. More clarity, steadier routines, and a way of looking after yourself afterwards.</p></article>
+  </div>
+</section>
+
+<section class="stats-band" id="stats">
+  <div class="stats-inner">
+    <p class="sec-k lift">Why it matters</p>
+    <h2 class="sec-h lift d1">The facts of how Lisa works.</h2>
+    <div class="stats">
+      <div class="stat lift mag"><b data-count="20" data-suffix="+">0</b><span>Years beside people in NHS care — not a wellness slogan.</span></div>
+      <div class="stat lift d1 mag"><b data-pop>1:1</b><span>One person. One conversation. Never a group programme.</span></div>
+      <div class="stat lift d2 mag"><b data-count="2" data-suffix=" days">0</b><span>Personal reply time. She writes back herself.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="words">
+  <p class="sec-k lift">In their words</p>
+  <h2 class="sec-h lift d1">What coaching can feel like.</h2>
+  <div class="quotes">
+    <article class="t-card lift"><p class="q">“I came in feeling like I was managing everything badly. I left with a much clearer sense of what actually needed my attention.”</p><p class="a">Placeholder testimonial</p></article>
+    <article class="t-card lift d1"><p class="q">“It was the first time in a long while someone asked me what I wanted, and then waited for the answer.”</p><p class="a">Placeholder testimonial</p></article>
+    <article class="t-card lift d2"><p class="q">“The changes were small, which is exactly why they stuck. Months later, they are simply how I live now.”</p><p class="a">Placeholder testimonial</p></article>
+  </div>
+</section>
+
+<section>
+  <p class="sec-k lift">Questions</p>
+  <h2 class="sec-h lift d1">Before you book.</h2>
+  <div style="margin-top:2rem">
+    <div class="faq-item lift">
+      <button class="faq-q">What happens on a discovery call? <i>+</i></button>
+      <div class="faq-a"><div><p>A friendly, confidential 30-minute conversation online. You share what has brought you here, I explain how I work, and we both decide whether it feels like a good fit. No cost. No obligation.</p></div></div>
+    </div>
+    <div class="faq-item lift">
+      <button class="faq-q">Is coaching the same as therapy? <i>+</i></button>
+      <div class="faq-a"><div><p>No. Therapy often works with the past and with mental health conditions. Coaching works forward from where you are now — clarity, habits, confidence. If something belongs with therapy or your GP, I will say so honestly.</p></div></div>
+    </div>
+    <div class="faq-item lift">
+      <button class="faq-q">What if I don’t know what I want? <i>+</i></button>
+      <div class="faq-a"><div><p>That is a common starting point. Early work is simply making space to notice what matters most right now. You do not need a plan before we begin.</p></div></div>
+    </div>
+    <div class="faq-item lift">
+      <button class="faq-q">Are sessions online? <i>+</i></button>
+      <div class="faq-a"><div><p>Yes. Video sessions from anywhere in the UK, at times that fit around work and family.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="contact">
+  <div class="ghost-lb" aria-hidden="true">LB</div>
+  <p class="sec-k lift">Get in touch</p>
+  <h2 class="sec-h lift d1">Ready to take the first step?</h2>
+  <p class="sec-p lift d2" style="margin-inline:auto">No pressure. Just a confidential conversation about what is going on, and what might help.</p>
+  <div class="actions lift d3" style="justify-content:center">
+    <a class="btn mag" href="#contact">Book a Free Discovery Call <span class="arrow">→</span></a>
+  </div>
+</section>
+
+<footer>
+  <p>LB Livewell provides health and wellbeing coaching. Coaching is not medical treatment, therapy, or a substitute for advice from your GP. If you are unwell or in crisis, contact your GP, NHS 111, or emergency services.</p>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var header = document.getElementById("header");
+  var progress = document.getElementById("progress");
+  var portrait = document.getElementById("portrait");
+  var targetY = 0, currentY = 0;
+
+  function onScroll(){
+    targetY = window.scrollY || 0;
+    var h = document.documentElement;
+    var max = Math.max(1, h.scrollHeight - h.clientHeight);
+    progress.style.width = (targetY / max * 100) + "%";
+    header.classList.toggle("scrolled", targetY > 24);
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+
+  var waffle = document.getElementById("waffle");
+  var drawer = document.getElementById("drawer");
+  var scrim = document.getElementById("scrim");
+  function setMenu(open){
+    document.body.classList.toggle("menu-open", open);
+    waffle.setAttribute("aria-expanded", open ? "true" : "false");
+    waffle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    drawer.setAttribute("aria-hidden", open ? "false" : "true");
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+  waffle.addEventListener("click", function(){ setMenu(!document.body.classList.contains("menu-open")); });
+  scrim.addEventListener("click", function(){ setMenu(false); });
+  drawer.querySelectorAll("a").forEach(function(a){
+    a.addEventListener("click", function(){ setMenu(false); });
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape") setMenu(false);
+  });
+
+  function tick(){
+    currentY += (targetY - currentY) * 0.08;
+    if (portrait && !reduce){
+      portrait.style.transform = "translate3d(0," + (currentY * 0.12) + "px,0)";
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  var lifts = document.querySelectorAll(".lift");
+  if (reduce || !("IntersectionObserver" in window)){
+    lifts.forEach(function(el){ el.classList.add("is-in"); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!e.isIntersecting) return;
+        e.target.classList.add("is-in");
+        var n = e.target.querySelector("[data-count], [data-pop]");
+        if (n && !n.dataset.done){
+          n.dataset.done = "1";
+          if (n.hasAttribute("data-count")){
+            var end = +n.dataset.count, suf = n.dataset.suffix || "", t0 = null;
+            function step(ts){
+              if (!t0) t0 = ts;
+              var p = Math.min((ts - t0)/1600, 1);
+              var ease = 1 - Math.pow(1-p, 4);
+              n.textContent = Math.round(end * ease) + suf;
+              if (p < 1) requestAnimationFrame(step);
+              else e.target.classList.add("is-settled");
+            }
+            requestAnimationFrame(step);
+          } else {
+            setTimeout(function(){ e.target.classList.add("is-settled"); }, 1150);
+          }
+        }
+        io.unobserve(e.target);
+      });
+    }, {threshold:0.14, rootMargin:"0px 0px -8% 0px"});
+    lifts.forEach(function(el){ io.observe(el); });
+  }
+
+  document.querySelectorAll(".faq-item").forEach(function(item){
+    item.querySelector(".faq-q").addEventListener("click", function(){
+      var open = item.classList.contains("open");
+      document.querySelectorAll(".faq-item").forEach(function(i){ i.classList.remove("open"); });
+      if (!open) item.classList.add("open");
+    });
+  });
+
+  if (!reduce){
+    document.querySelectorAll(".mag").forEach(function(el){
+      el.addEventListener("mousemove", function(e){
+        var r = el.getBoundingClientRect();
+        var x = (e.clientX - r.left - r.width/2) * 0.22;
+        var y = (e.clientY - r.top - r.height/2) * 0.28;
+        el.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+      });
+      el.addEventListener("mouseleave", function(){ el.style.transform = ""; });
+    });
+    var vis = document.querySelector(".visual");
+    if (vis && portrait){
+      vis.addEventListener("mousemove", function(e){
+        var r = vis.getBoundingClientRect();
+        var rx = ((e.clientY - r.top) / r.height - .5) * -6;
+        var ry = ((e.clientX - r.left) / r.width - .5) * 8;
+        portrait.style.transform = "perspective(900px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translate3d(0," + (currentY * 0.12) + "px,0)";
+      });
+      vis.addEventListener("mouseleave", function(){
+        portrait.style.transform = "translate3d(0," + (currentY * 0.12) + "px,0)";
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>
