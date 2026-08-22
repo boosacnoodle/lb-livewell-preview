@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LIVEWELL — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff;
+    --ink:#111;
+    --mute:#4a4a4a;
+    --line:#e6e6e6;
+    --red:#9a3b2a;
+    --band:#111;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;overflow-x:clip}
+  body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{width:min(1120px,calc(100% - 2.2rem));margin:0 auto}
+
+  header{
+    position:sticky;top:0;z-index:30;background:#fffc;backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    min-height:64px;gap:1rem;
+  }
+  .logo{font-weight:800;letter-spacing:-.03em;font-size:1.05rem;text-decoration:none}
+  .links{display:none;gap:1.4rem;font-size:.86rem}
+  .book{background:#111;color:#fff;text-decoration:none;font-size:.72rem;font-weight:700;letter-spacing:.08em;padding:.7rem .85rem;white-space:nowrap}
+  .waffle{width:42px;height:42px;border:0;background:none}
+  .waffle i,.waffle i:before,.waffle i:after{display:block;width:16px;height:1.5px;background:#111}
+  .waffle i{position:relative;margin:0 auto}
+  .waffle i:before,.waffle i:after{content:"";position:absolute;left:0}
+  .waffle i:before{top:-5px}
+  .waffle i:after{top:5px}
+  .drawer{display:none;flex-direction:column;gap:.9rem;padding:0 1.1rem 1rem;border-bottom:1px solid var(--line);background:#fff}
+  body.open .drawer{display:flex}
+  .drawer a{text-decoration:none;font-size:1.05rem}
+
+  .hero{padding:1.4rem 0 2.2rem}
+  .hero-grid{display:grid;gap:1.3rem}
+  .kicker{display:flex;align-items:center;gap:.5rem;color:var(--red);font-size:.68rem;font-weight:600;letter-spacing:.08em}
+  .kicker:before{content:"";width:8px;height:8px;background:var(--red);flex:0 0 8px}
+  h1{font-size:clamp(2.15rem,9vw,3.4rem);font-weight:800;letter-spacing:-.045em;line-height:.95;margin:.7rem 0 1rem}
+  .lead{color:var(--mute);font-size:1.02rem;max-width:36rem}
+  .actions{display:flex;flex-direction:column;gap:.85rem;margin-top:1.2rem;align-items:flex-start}
+  .btn{background:#111;color:#fff;text-decoration:none;padding:.95rem 1.1rem;font-weight:600;font-size:.92rem}
+  .textlink{font-size:.92rem;border-bottom:1px solid #111;padding-bottom:.15rem;text-decoration:none}
+  .photo{position:relative}
+  .photo img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:78% 18%;display:block}
+  .caption{position:absolute;left:0;right:0;bottom:0;background:#111;color:#fff;font-size:.62rem;letter-spacing:.1em;padding:.55rem .7rem}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+  .stat{padding:1rem .85rem;border-bottom:1px solid var(--line)}
+  .stat:nth-child(odd){border-right:1px solid var(--line)}
+  .stat b{display:block;font-size:.95rem}
+  .stat span{display:block;color:var(--mute);font-size:.78rem;margin-top:.15rem}
+
+  section{padding:2.6rem 0}
+  .label{color:var(--red);font-size:.68rem;font-weight:600;letter-spacing:.1em;margin-bottom:.7rem}
+  h2{font-size:clamp(1.7rem,7vw,2.5rem);font-weight:800;letter-spacing:-.04em;line-height:1.05}
+  .sub{margin-top:.75rem;color:var(--mute);max-width:38rem}
+
+  .grid4{margin-top:1.4rem;border:1px solid #d9d9d9;background:#f6f6f6}
+  .cell{padding:1.1rem 1rem;border-bottom:1px solid #d9d9d9}
+  .cell:last-child{border-bottom:0}
+  .num{color:#8a8a8a;font-size:.78rem;margin-bottom:.35rem}
+  .cell h3{font-size:1.05rem;margin-bottom:.35rem}
+  .cell p{color:var(--mute);font-size:.92rem}
+
+  .about{display:grid;gap:1.2rem}
+  .about img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:78% 16%;display:block}
+
+  .steps{margin-top:1.3rem;display:grid;gap:1.2rem}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:.75rem;padding-bottom:1.1rem;border-bottom:1px solid var(--line)}
+  .step-num{font-weight:800;font-size:1.15rem;color:#888}
+  .step h3{font-size:1.08rem}
+  .step p{color:var(--mute);margin-top:.3rem}
+
+  .facts{background:var(--band);color:#fff;padding:2.8rem 0}
+  .facts .label{color:#d9a090}
+  .fact-grid{display:grid;gap:1.5rem;margin-top:1.4rem}
+  .fact-num{font-size:3.2rem;font-weight:800;letter-spacing:-.05em;line-height:.9}
+  .fact-label{margin-top:.45rem;font-size:.68rem;letter-spacing:.08em;opacity:.8;max-width:16rem}
+
+  .notes{display:grid;gap:.75rem;margin-top:1.25rem}
+  .note{border:1px solid #ddd;padding:1rem}
+  .note-head{display:flex;justify-content:space-between;font-size:.62rem;letter-spacing:.1em;color:#888;margin-bottom:.65rem}
+  .note p{font-size:1.02rem;line-height:1.4}
+
+  .faq-list{margin-top:1.2rem;border-top:1px solid var(--line)}
+  .faq-item{border-bottom:1px solid var(--line)}
+  .faq-q{width:100%;background:none;border:0;display:flex;justify-content:space-between;gap:1rem;padding:1.05rem 0;text-align:left;font-size:1.02rem;font-weight:600}
+  .faq-a{display:none;padding:0 0 1rem;color:var(--mute)}
+  .faq-item.open .faq-a{display:block}
+
+  .cta-section{background:#111;color:#fff;padding:3rem 0}
+  .cta-section h2{font-size:2rem}
+  .cta-section p{margin:.8rem 0 1.2rem;opacity:.8}
+  .btn-light{display:inline-block;background:#fff;color:#111;text-decoration:none;padding:.95rem 1.1rem;font-weight:600}
+
+  footer{padding:1.5rem 0 2.2rem;color:#666;font-size:.75rem}
+
+  @media (min-width:860px){
+    .links{display:flex}
+    .waffle,.drawer{display:none !important}
+    .hero-grid{grid-template-columns:1.05fr .95fr;align-items:center;gap:3rem}
+    .photo img{aspect-ratio:4/5;max-height:78vh}
+    .actions{flex-direction:row;align-items:center}
+    .stats{grid-template-columns:repeat(4,1fr)}
+    .stat{border-right:1px solid var(--line);border-bottom:0}
+    .stat:last-child{border-right:0}
+    .grid4{display:grid;grid-template-columns:1fr 1fr}
+    .cell:nth-child(odd){border-right:1px solid #d9d9d9}
+    .cell:nth-child(-n+2){border-bottom:1px solid #d9d9d9}
+    .about{grid-template-columns:.9fr 1.1fr;align-items:center;gap:2.5rem}
+    .fact-grid{grid-template-columns:repeat(3,1fr)}
+    .notes{grid-template-columns:repeat(3,1fr)}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top">LB LIVEWELL</a>
+    <nav class="links">
+      <a href="#problem">The problem</a>
+      <a href="#about">About Lisa</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="book" href="#contact">BOOK A CALL</a>
+    <button class="waffle" id="waffle" type="button" aria-label="Menu"><i></i></button>
+  </div>
+  <nav class="drawer" id="drawer">
+    <a href="#problem">The problem</a>
+    <a href="#about">About Lisa</a>
+    <a href="#how">How it works</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+</header>
+
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="kicker">HEALTH &amp; WELLBEING COACHING · UK-WIDE, ONLINE</div>
+      <h1>No fluff, no fads.<br>Just real<br>conversations.</h1>
+      <p class="lead">I'm Lisa — a Registered Nurse with 20+ years in the NHS. No mantras, no meal plans, no pretending discipline fixes a life that isn't set up to support you. Just a straight conversation about what's actually going on, and what to do about it.</p>
+      <div class="actions">
+        <a class="btn" href="#contact">Book a free discovery call →</a>
+        <a class="textlink" href="#how">What this actually involves</a>
+      </div>
+    </div>
+    <div class="photo">
+      <img src="lisa-hero.jpg" alt="Lisa">
+      <div class="caption">CONFIDENTIAL · CLIENT-LED · NO SCRIPT</div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><b>NMC</b><span>Registered Nurse</span></div>
+    <div class="stat"><b>20+ YRS</b><span>NHS front line</span></div>
+    <div class="stat"><b>1:1</b><span>No group programmes</span></div>
+    <div class="stat"><b>UK-WIDE</b><span>Online, video</span></div>
+  </div>
+</div>
+
+<section id="problem">
+  <div class="wrap">
+    <div class="label">WHY PEOPLE ACTUALLY BOOK THIS CALL</div>
+    <h2>You don't need a neat problem to start.</h2>
+    <p class="sub">Most people arrive not with a diagnosis, but with a feeling that life has become harder to carry than it should be.</p>
+    <div class="grid4">
+      <div class="cell"><div class="num">01</div><h3>You're overwhelmed</h3><p>Everything's urgent, nothing's finished, and you'd like ten minutes of quiet to think straight.</p></div>
+      <div class="cell"><div class="num">02</div><h3>You've lost your footing</h3><p>You used to feel more like yourself. You don't need to be told to try harder — you need to find your way back.</p></div>
+      <div class="cell"><div class="num">03</div><h3>You want habits that actually stick</h3><p>Not a rigid plan you abandon in a fortnight. Something built around the week you actually have.</p></div>
+      <div class="cell"><div class="num">04</div><h3>You're mid-change</h3><p>New role, new caring responsibility, a health scare, a shift at home. Change costs more than people admit.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap about">
+    <img src="lisa-about.jpg" alt="Lisa outdoors">
+    <div>
+      <div class="label">ABOUT LISA</div>
+      <h2>Twenty years in the NHS taught me where change actually starts.</h2>
+      <p class="sub">Nursing taught me that health is never just clinical — it's shaped by everything happening outside the treatment room: sleep, work, pressure, confidence, and the daily patterns nobody has time to examine.</p>
+      <p class="sub">Time and again, I've watched people struggle not from a lack of willpower, but because no one gave them the time or space to understand what was really in their way. That's rarely more information. It's honest attention, and someone who isn't trying to sell them anything.</p>
+      <p class="sub">You don't need to have it figured out before we start. That's the point of the call.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="label">HOW IT WORKS</div>
+    <h2>A calm path. It starts with a conversation.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div><h3>Free discovery call</h3><p>A confidential 30 minutes. You talk about what is going on. We both decide if coaching is the right thing — no charge, no pressure.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div><h3>One-to-one coaching</h3><p>You set the direction. I ask the questions that get you past the surface. We agree small, specific steps — not a generic plan copied from someone else's life.</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div><h3>Progress that actually holds</h3><p>Because it's built around your real week, not a fantasy version of it. Clearer thinking, steadier routines, and a way of managing yourself once we've stopped meeting.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="facts">
+  <div class="wrap">
+    <div class="label">THE FACTS, NOT THE PITCH</div>
+    <h2>No slogans. Just how this actually works.</h2>
+    <div class="fact-grid">
+      <div><div class="fact-num">20+</div><div class="fact-label">YEARS IN NHS CARE — NOT A WELLNESS BRAND</div></div>
+      <div><div class="fact-num">1:1</div><div class="fact-label">ONE PERSON, ONE CONVERSATION. NO GROUPS, EVER</div></div>
+      <div><div class="fact-num">24H</div><div class="fact-label">TYPICAL REPLY TIME — LISA WRITES BACK HERSELF</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="words">
+  <div class="wrap">
+    <div class="label">WHAT PEOPLE SAY, UNEDITED</div>
+    <h2>No cherry-picked gushing. Just what changed.</h2>
+    <div class="notes">
+      <div class="note">
+        <div class="note-head"><span>CLIENT NOTE</span><span>PLACEHOLDER</span></div>
+        <p>“I came in feeling like I was managing everything badly. I left with a clear sense of what actually needed my attention — and what didn't.”</p>
+      </div>
+      <div class="note">
+        <div class="note-head"><span>CLIENT NOTE</span><span>PLACEHOLDER</span></div>
+        <p>“First time in a long while someone asked what I wanted, then actually waited for the answer instead of jumping to advice.”</p>
+      </div>
+      <div class="note">
+        <div class="note-head"><span>CLIENT NOTE</span><span>PLACEHOLDER</span></div>
+        <p>“The changes were small — that's exactly why they stuck. Months on, it's just how I live now.”</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="label">BEFORE YOU BOOK</div>
+    <h2>Straight answers, no hedging.</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" type="button">What actually happens on the discovery call? <span>+</span></button>
+        <div class="faq-a">A confidential 30-minute video call. You explain what's brought you here, I explain how I work, and we both decide honestly if it's a fit. No charge, no obligation, no follow-up pressure.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Is this therapy? <span>+</span></button>
+        <div class="faq-a">No. Therapy works with the past and clinical mental health conditions. Coaching works forward from where you are now. If what you need is therapy or a GP, I'll tell you directly rather than take your money.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">What if I don't know what I actually want? <span>+</span></button>
+        <div class="faq-a">Normal starting point. Most of the early work is just making space to notice what actually matters right now, without a plan already forced onto it.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" type="button">Is it online? <span>+</span></button>
+        <div class="faq-a">Yes — video, anywhere in the UK, at times that fit around work and family. No commuting to an office to talk about your commute.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section" id="contact">
+  <div class="wrap">
+    <h2>Ready, or just curious? Either is fine.</h2>
+    <p>One confidential call. No pressure, no pitch deck, no follow-up spam.</p>
+    <a class="btn-light" href="#contact">Book a Free Discovery Call →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    LB Livewell provides health and wellbeing coaching. Coaching is not medical treatment, therapy, or a substitute for advice from your GP. If you are unwell or in crisis, contact your GP, NHS 111, or emergency services.
+  </div>
+</footer>
+
+<script>
+document.getElementById('waffle').addEventListener('click', function(){
+  document.body.classList.toggle('open');
+});
+document.querySelectorAll('#drawer a').forEach(function(a){
+  a.addEventListener('click', function(){ document.body.classList.remove('open'); });
+});
+document.querySelectorAll('.faq-item').forEach(function(item){
+  item.querySelector('.faq-q').addEventListener('click', function(){
+    var on = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(function(i){ i.classList.remove('open'); });
+    if (!on) item.classList.add('open');
+  });
+});
+</script>
+</body>
+</html>
