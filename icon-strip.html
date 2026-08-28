@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Icon Strip — Lisa's credentials</title>
+<style>
+  :root {
+    --paper: #F7F4EF;
+    --ink: #1D1B16;
+    --muted: #6E6759;
+    --accent: #C96F3A;
+    --line: rgba(29, 27, 22, 0.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .intro { min-height: 55vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
+  .intro .kicker { font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+  .intro h1 { font-size: clamp(38px, 5vw, 58px); line-height: 1.03; font-weight: 600; letter-spacing: -0.02em; max-width: 16ch; }
+  .intro h1 em { font-style: normal; color: var(--accent); }
+  .intro p { margin-top: 22px; color: var(--muted); font-size: 17px; max-width: 46ch; }
+
+  /* ============ THE ICON STRIP (Craft-style) ============ */
+  .strip-wrap { padding: 20px 0 90px; }
+  .viewport {
+    position: relative; overflow: hidden;
+    padding: 24px 0;
+  }
+  .track {
+    position: absolute; top: 0; left: 0;
+    display: flex; gap: 48px; align-items: center;
+    will-change: transform;
+    /* FAIL-OPEN: static row, wraps, without JS */
+    flex-wrap: wrap; justify-content: center; padding: 0 24px;
+  }
+  .icon-tile {
+    width: 128px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px; text-align: center;
+    flex-shrink: 0;
+  }
+  .icon-tile .i-box {
+    width: 72px; height: 72px;
+    border-radius: 22px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    box-shadow: 0 10px 30px -14px rgba(29, 27, 22, 0.25);
+  }
+  .icon-tile .i-label { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; }
+  .icon-tile .i-sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+
+  /* tint per tile */
+  .icon-tile.t1 .i-box { background: #F3E2D4; } .icon-tile.t2 .i-box { background: #CFE0C8; }
+  .icon-tile.t3 .i-box { background: #DCD1EE; } .icon-tile.t4 .i-box { background: #E9F2F5; }
+  .icon-tile.t5 .i-box { background: #FDF6DC; }
+
+  .hint { text-align: center; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-top: 36px; }
+  .hint .arrows { display: inline-flex; gap: 10px; margin-left: 10px; }
+  .hint button {
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+    background: transparent; color: var(--ink); font-size: 14px; cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), background 0.2s ease;
+  }
+  .hint button:hover { background: #fff; }
+  .hint button:active { transform: scale(0.92); }
+
+  .outro { min-height: 40vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
+  .outro h2 { font-size: clamp(24px, 3.6vw, 38px); font-weight: 600; letter-spacing: -0.01em; max-width: 20ch; }
+  .outro p { margin-top: 16px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .icon-tile { width: 100px; }
+    .icon-tile .i-box { width: 60px; height: 60px; font-size: 26px; border-radius: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div>
+    <div class="kicker">Icon strip · Lisa's credentials</div>
+    <h1>Qualified, <em>registered.</em></h1>
+    <p>Craft's icon row, rebuilt for mum — her real accreditations as horizontal symbol tiles, drifting slowly. Swap the glyphs and labels in the strip below.</p>
+  </div>
+</div>
+
+<section class="strip-wrap">
+  <div class="viewport" id="viewport">
+    <div class="track" id="track">
+      <!-- 5 real credentials from livewell credentials section — swap glyph/label/sub -->
+      <div class="icon-tile t1"><div class="i-box">🛡️</div><div class="i-label">UKIHCA Registered</div><div class="i-sub">Health Coach</div></div>
+      <div class="icon-tile t2"><div class="i-box">🎓</div><div class="i-label">Certified Coaching Pro</div><div class="i-sub">ICF Level 1</div></div>
+      <div class="icon-tile t3"><div class="i-box">🌍</div><div class="i-label">ICF Member</div><div class="i-sub">International Coaching Federation</div></div>
+      <div class="icon-tile t4"><div class="i-box">🩺</div><div class="i-label">Registered Nurse</div><div class="i-sub">NMC</div></div>
+      <div class="icon-tile t5"><div class="i-box">🏫</div><div class="i-label">NMC Registered Teacher</div><div class="i-sub">Teaching qualification</div></div>
+      <!-- duplicate set for the seamless loop -->
+      <div class="icon-tile t1"><div class="i-box">🛡️</div><div class="i-label">UKIHCA Registered</div><div class="i-sub">Health Coach</div></div>
+      <div class="icon-tile t2"><div class="i-box">🎓</div><div class="i-label">Certified Coaching Pro</div><div class="i-sub">ICF Level 1</div></div>
+      <div class="icon-tile t3"><div class="i-box">🌍</div><div class="i-label">ICF Member</div><div class="i-sub">International Coaching Federation</div></div>
+      <div class="icon-tile t4"><div class="i-box">🩺</div><div class="i-label">Registered Nurse</div><div class="i-sub">NMC</div></div>
+      <div class="icon-tile t5"><div class="i-box">🏫</div><div class="i-label">NMC Registered Teacher</div><div class="i-sub">Teaching qualification</div></div>
+    </div>
+  </div>
+  <div class="hint">
+    drifts on its own · drag to explore
+    <span class="arrows">
+      <button id="prevBtn" aria-label="Previous">←</button>
+      <button id="nextBtn" aria-label="Next">→</button>
+    </span>
+  </div>
+</section>
+
+<div class="outro">
+  <div>
+    <h2>Five credentials, one quiet row. Trust shown, not told.</h2>
+    <p>Same 40px/s drift as the tiled carousel — transform-only, seamless, reduced-motion static.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var track = document.getElementById("track");
+  var viewport = document.getElementById("viewport");
+  var tiles = [].slice.call(track.children);
+  var N = tiles.length;
+  var SET = N / 2;
+  var SPEED = 40;
+  var x = 0;
+  var setW = 0;
+  var drifting = !reduced;
+  var dragging = false;
+  var lastT = 0;
+
+  if (reduced) return;
+
+  function tick(now) {
+    if (!dragging && drifting) {
+      var dt = lastT ? (now - lastT) / 1000 : 0;
+      x -= SPEED * dt;
+      if (x <= -setW) x += setW;
+      if (x > 0) x -= setW;
+      track.style.transform = "translate3d(" + x + "px, 0, 0)";
+    }
+    lastT = now;
+    requestAnimationFrame(tick);
+  }
+
+  var startX = 0, startOffset = 0;
+  viewport.addEventListener("pointerdown", function (e) {
+    dragging = true; drifting = false;
+    startX = e.clientX; startOffset = x;
+    viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener("pointermove", function (e) {
+    if (!dragging) return;
+    x = startOffset + (e.clientX - startX);
+    if (x <= -setW) x += setW;
+    if (x > 0) x -= setW;
+    track.style.transform = "translate3d(" + x + "px, 0, 0)";
+  });
+  function endDrag() { dragging = false; drifting = true; }
+  viewport.addEventListener("pointerup", endDrag);
+  viewport.addEventListener("pointercancel", endDrag);
+
+  function skip(dir) {
+    x += dir * 176;  // tile + gap
+    if (x <= -setW) x += setW;
+    if (x > 0) x -= setW;
+    track.style.transform = "translate3d(" + x + "px, 0, 0)";
+  }
+  document.getElementById("nextBtn").addEventListener("click", function () { skip(-1); });
+  document.getElementById("prevBtn").addEventListener("click", function () { skip(1); });
+
+  function layout() {
+    var gap = 48;
+    var first = tiles[0].getBoundingClientRect();
+    setW = (first.width + gap) * SET;
+    track.style.flexWrap = "nowrap";
+    track.style.justifyContent = "flex-start";
+    track.style.padding = "0";
+    if (x < -setW) x %= setW;
+  }
+
+  window.addEventListener("resize", layout);
+  layout();
+  requestAnimationFrame(function (now) { lastT = now; requestAnimationFrame(tick); });
+})();
+</script>
+</body>
+</html>
