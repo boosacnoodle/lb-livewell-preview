@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiled Carousel — depth study</title>
+<style>
+  :root {
+    --paper: #F7F4EF;
+    --ink: #1D1B16;
+    --muted: #6E6759;
+    --accent: #C96F3A;
+    --line: rgba(29, 27, 22, 0.12);
+    --spring: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .intro { min-height: 80vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
+  .intro .kicker { font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+  .intro h1 { font-size: clamp(40px, 6vw, 68px); line-height: 1.03; font-weight: 600; letter-spacing: -0.02em; max-width: 14ch; }
+  .intro h1 em { font-style: normal; color: var(--accent); }
+  .intro p { margin-top: 22px; color: var(--muted); font-size: 17px; max-width: 46ch; }
+
+  /* ============ THE CAROUSEL ============ */
+  .carousel-wrap { position: relative; padding: 60px 0 90px; }
+  .carousel {
+    position: relative;
+    /* perspective: the depth stage */
+    perspective: 1200px;
+    height: 420px;
+    overflow: visible;
+  }
+  .track {
+    /* FAIL-OPEN: static container by default — tiles flow in a row.
+       JS upgrades to the absolute 3D stage. */
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 14px;
+  }
+  .tile {
+    width: 280px; height: 380px;
+    border-radius: 20px;
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 60px -22px rgba(29, 27, 22, 0.35);
+    padding: 26px 22px;
+    display: flex; flex-direction: column;
+  }
+  .tile .t-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .tile .t-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; }
+  .tile .t-dots { display: flex; gap: 4px; }
+  .tile .t-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(29,27,22,0.15); }
+  .tile h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .tile .t-blank {
+    margin-top: 12px; border: 1.5px dashed rgba(29,27,22,0.18); border-radius: 12px;
+    padding: 18px 14px; flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(29,27,22,0.3);
+  }
+  .tile .t-foot { margin-top: 14px; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+
+  /* tile tints */
+  .tile.t1 { background: #FFFFFF; } .tile.t1 .t-icon { background: #F3E2D4; }
+  .tile.t2 { background: #FBF1E7; } .tile.t2 .t-icon { background: #EBCFB6; }
+  .tile.t3 { background: #EFF3EC; } .tile.t3 .t-icon { background: #CFE0C8; }
+  .tile.t4 { background: #F1EDF7; } .tile.t4 .t-icon { background: #DCD1EE; }
+  .tile.t5 { background: #FDF6DC; } .tile.t5 .t-icon { background: #EEDF9C; }
+  .tile.t6 { background: #E9F2F5; } .tile.t6 .t-icon { background: #C3DEE7; }
+  .tile.t7 { background: #FBE9E9; } .tile.t7 .t-icon { background: #EFC4C4; }
+  .tile.t8 { background: #EEF1F9; } .tile.t8 .t-icon { background: #C9D4EE; }
+
+  .hint { text-align: center; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-top: 36px; }
+  .hint .arrows { display: inline-flex; gap: 10px; margin-left: 10px; }
+  .hint button {
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+    background: transparent; color: var(--ink); font-size: 14px; cursor: pointer;
+    transition: transform 0.25s var(--spring), background 0.2s ease;
+  }
+  .hint button:hover { background: #fff; }
+  .hint button:active { transform: scale(0.92); }
+
+  .outro { min-height: 50vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
+  .outro h2 { font-size: clamp(26px, 4vw, 42px); font-weight: 600; letter-spacing: -0.01em; max-width: 18ch; }
+  .outro p { margin-top: 16px; color: var(--muted); }
+
+  @media (max-width: 640px) {
+    .carousel { height: 380px; }
+    .tile { width: 230px; height: 340px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div>
+    <div class="kicker">Tiled carousel · depth</div>
+    <h1>Tiles that <em>turn.</em></h1>
+    <p>Auto-advancing, one after another. The active tile stands forward; neighbours fall back in 3D. Placeholder slots ready for your content.</p>
+  </div>
+</div>
+
+<section class="carousel-wrap">
+  <div class="carousel" id="carousel">
+    <div class="track" id="track">
+      <!-- 8 placeholder tiles — fill the .t-blank + copy in each -->
+      <div class="tile t1"><div class="t-top"><div class="t-icon">✦</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Session one</h3><div class="t-blank">Your title here</div><div class="t-foot">01 / 08</div></div>
+      <div class="tile t2"><div class="t-top"><div class="t-icon">◎</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Session two</h3><div class="t-blank">Your title here</div><div class="t-foot">02 / 08</div></div>
+      <div class="tile t3"><div class="t-top"><div class="t-icon">☘</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Weekly rhythm</h3><div class="t-blank">Your title here</div><div class="t-foot">03 / 08</div></div>
+      <div class="tile t4"><div class="t-top"><div class="t-icon">✶</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Check-in</h3><div class="t-blank">Your title here</div><div class="t-foot">04 / 08</div></div>
+      <div class="tile t5"><div class="t-top"><div class="t-icon">✎</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Journal</h3><div class="t-blank">Your title here</div><div class="t-foot">05 / 08</div></div>
+      <div class="tile t6"><div class="t-top"><div class="t-icon">☀</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Morning pages</h3><div class="t-blank">Your title here</div><div class="t-foot">06 / 08</div></div>
+      <div class="tile t7"><div class="t-top"><div class="t-icon">♥</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Boundaries</h3><div class="t-blank">Your title here</div><div class="t-foot">07 / 08</div></div>
+      <div class="tile t8"><div class="t-top"><div class="t-icon">➤</div><div class="t-dots"><span></span><span></span><span></span></div></div><h3>Next step</h3><div class="t-blank">Your title here</div><div class="t-foot">08 / 08</div></div>
+    </div>
+  </div>
+  <div class="hint">
+    auto-advances · drag to explore
+    <span class="arrows">
+      <button id="prevBtn" aria-label="Previous">←</button>
+      <button id="nextBtn" aria-label="Next">→</button>
+    </span>
+  </div>
+</section>
+
+<div class="outro">
+  <div>
+    <h2>One active tile. Everything else falls back in depth.</h2>
+    <p>3D perspective, spring transitions, transform-only. Reduced-motion renders a static row.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var tiles = [].slice.call(document.querySelectorAll(".tile"));
+  var track = document.getElementById("track");
+  var carousel = document.getElementById("carousel");
+  var N = tiles.length;
+  var index = 0;
+  var AUTO_MS = 2600;
+
+  /* ---------- layout ---------- */
+  var TILE_W = 0, TILE_H = 0, GAP = 0, spread = 0;
+
+  function layout() {
+    var first = tiles[0].getBoundingClientRect();
+    TILE_W = first.width;
+    TILE_H = first.height;
+    GAP = Math.max(14, TILE_W * 0.12);
+    spread = TILE_W + GAP;
+    // stack tiles at the origin — the track positions them in 3D
+    tiles.forEach(function (t, i) {
+      t.style.position = "absolute";
+      t.style.left = "0px";
+      t.style.top = "0px";
+    });
+    // upgrade the track to the 3D stage
+    track.style.position = "absolute";
+    track.style.left = "50%";
+    track.style.top = "0px";
+    track.style.transformStyle = "preserve-3d";
+    track.style.willChange = "transform";
+    position();
+  }
+
+  /* ---------- the depth model ----------
+     Each tile's 3D transform is a function of (i - index) around the track.
+     Active tile (delta 0): full size, no rotation, highest z.
+     Neighbours: step back in z, rotate slightly, drop slightly, shrink.
+     The curve is soft (cosine-ish) so nothing ever looks mechanical. */
+  function position() {
+    var cx = 0; // track centre = carousel centre (track is centred on it)
+    tiles.forEach(function (t, i) {
+      var delta = i - index;
+      // wrap so the carousel loops
+      if (delta > N / 2) delta -= N;
+      if (delta < -N / 2) delta += N;
+
+      var d = Math.abs(delta);
+      var x = delta * spread;
+      // depth: neighbours fall back on z, and scale slightly
+      var z = -d * 110;
+      var scale = 1 - d * 0.07;
+      var rotY = -delta * 14;
+      var rotX = d * 3;
+      var yDrop = d * 8;
+      var opacity = d > 3 ? 0 : 1 - d * 0.14;
+
+      t.style.transform =
+        "translate3d(" + (cx + x) + "px," + yDrop + "px," + z + "px) " +
+        "rotateY(" + rotY + "deg) rotateX(" + rotX + "deg) scale(" + scale + ")";
+      t.style.zIndex = String(100 - d);
+      t.style.opacity = String(opacity);
+      t.style.filter = d > 0 ? "brightness(" + (1 - d * 0.05) + ")" : "none";
+    });
+  }
+
+  function go(next) {
+    index = ((next % N) + N) % N;
+    if (reduced) return;
+    track.style.transition = "transform 0s";
+    // animate via per-tile transitions on transform (spring-like ease)
+    tiles.forEach(function (t) {
+      t.style.transition = "transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease";
+    });
+    position();
+  }
+  function next() { go(index + 1); }
+  function prev() { go(index - 1); }
+
+  /* ---------- drag / swipe ---------- */
+  var dragStartX = 0, dragging = false, moved = 0;
+
+  carousel.addEventListener("pointerdown", function (e) {
+    dragging = true; moved = 0; dragStartX = e.clientX;
+    tiles.forEach(function (t) { t.style.transition = "transform 0.05s linear"; });
+    carousel.setPointerCapture(e.pointerId);
+    stopAuto();
+  });
+  carousel.addEventListener("pointermove", function (e) {
+    if (!dragging) return;
+    var dx = e.clientX - dragStartX;
+    moved = dx;
+    // live-follow: shift the whole track slightly
+    var follow = dx * 0.4;
+    tiles.forEach(function (t, i) {
+      var d = i - index;
+      if (d > N / 2) d -= N;
+      if (d < -N / 2) d += N;
+      var x = d * spread + follow;
+      var z = -Math.abs(d) * 110;
+      var scale = 1 - Math.abs(d) * 0.07;
+      t.style.transform = "translate3d(" + x + "px," + (Math.abs(d) * 8) + "px," + z + "px) rotateY(" + (-d * 14) + "deg) scale(" + scale + ")";
+    });
+  });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    if (moved < -60) next();
+    else if (moved > 60) prev();
+    else go(index);
+    startAuto();
+  }
+  carousel.addEventListener("pointerup", endDrag);
+  carousel.addEventListener("pointercancel", endDrag);
+
+  /* ---------- auto-advance ---------- */
+  var autoTimer = 0;
+  function startAuto() {
+    if (reduced) return;
+    stopAuto();
+    autoTimer = setInterval(next, AUTO_MS);
+  }
+  function stopAuto() { clearInterval(autoTimer); }
+
+  document.getElementById("nextBtn").addEventListener("click", function () { stopAuto(); next(); startAuto(); });
+  document.getElementById("prevBtn").addEventListener("click", function () { stopAuto(); prev(); startAuto(); });
+
+  window.addEventListener("resize", layout);
+
+  if (reduced) {
+    // static row — tiles already flow in normal document flow
+    document.getElementById("track").style.display = "flex";
+    document.getElementById("track").style.gap = "14px";
+    document.getElementById("track").style.flexWrap = "wrap";
+    document.getElementById("track").style.justifyContent = "center";
+    document.querySelector(".hint").style.display = "none";
+  } else {
+    layout();
+    startAuto();
+  }
+})();
+</script>
+</body>
+</html>
