@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Icon Strip — Lisa's credentials</title>
+<title>Credentials — Craft-style icon row (static, on paper)</title>
 <style>
   :root {
     --paper: #F7F4EF;
@@ -17,185 +17,117 @@
     background: var(--paper); color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
   }
 
-  .intro { min-height: 55vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
-  .intro .kicker { font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
-  .intro h1 { font-size: clamp(38px, 5vw, 58px); line-height: 1.03; font-weight: 600; letter-spacing: -0.02em; max-width: 16ch; }
-  .intro h1 em { font-style: normal; color: var(--accent); }
-  .intro p { margin-top: 22px; color: var(--muted); font-size: 17px; max-width: 46ch; }
-
-  /* ============ THE ICON STRIP (Craft-style) ============ */
-  .strip-wrap { padding: 20px 0 90px; }
-  .viewport {
-    position: relative; overflow: hidden;
-    padding: 24px 0;
+  .section {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 80px 24px;
   }
-  .track {
-    position: absolute; top: 0; left: 0;
-    display: flex; gap: 48px; align-items: center;
-    will-change: transform;
-    /* FAIL-OPEN: static row, wraps, without JS */
-    flex-wrap: wrap; justify-content: center; padding: 0 24px;
+  .kicker { font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+  .section h2 {
+    font-size: clamp(30px, 4.4vw, 48px);
+    font-weight: 600; letter-spacing: -0.02em; line-height: 1.06;
+    max-width: 16ch;
+  }
+  .section h2 em { font-style: normal; color: var(--accent); }
+
+  /* the icon row — Craft's format: glyph tile + label under */
+  .icon-row {
+    margin-top: 56px;
+    display: flex; align-items: flex-start; justify-content: center;
+    gap: 44px;
+    flex-wrap: wrap;
   }
   .icon-tile {
-    width: 128px;
+    width: 120px;
     display: flex; flex-direction: column; align-items: center;
-    gap: 14px; text-align: center;
-    flex-shrink: 0;
+    gap: 14px;
   }
   .icon-tile .i-box {
-    width: 72px; height: 72px;
-    border-radius: 22px;
+    width: 64px; height: 64px;
+    border-radius: 18px;
     background: #FFFFFF;
     border: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center;
-    font-size: 30px;
-    box-shadow: 0 10px 30px -14px rgba(29, 27, 22, 0.25);
+    box-shadow: 0 12px 28px -18px rgba(29, 27, 22, 0.35);
   }
-  .icon-tile .i-label { font-size: 13px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; }
-  .icon-tile .i-sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+  .icon-tile .i-box svg { width: 30px; height: 30px; stroke: var(--ink); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-tile .i-label { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; }
+  .icon-tile .i-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
 
-  /* tint per tile */
-  .icon-tile.t1 .i-box { background: #F3E2D4; } .icon-tile.t2 .i-box { background: #CFE0C8; }
-  .icon-tile.t3 .i-box { background: #DCD1EE; } .icon-tile.t4 .i-box { background: #E9F2F5; }
-  .icon-tile.t5 .i-box { background: #FDF6DC; }
+  /* soft tint per tile — quiet, on-paper */
+  .icon-tile.t1 .i-box { background: #F7EDE3; } .icon-tile.t2 .i-box { background: #EDF2E8; }
+  .icon-tile.t3 .i-box { background: #EFEAF6; } .icon-tile.t4 .i-box { background: #E7F0F4; }
+  .icon-tile.t5 .i-box { background: #F6F0D9; }
 
-  .hint { text-align: center; font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-top: 36px; }
-  .hint .arrows { display: inline-flex; gap: 10px; margin-left: 10px; }
-  .hint button {
-    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
-    background: transparent; color: var(--ink); font-size: 14px; cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), background 0.2s ease;
-  }
-  .hint button:hover { background: #fff; }
-  .hint button:active { transform: scale(0.92); }
-
-  .outro { min-height: 40vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
-  .outro h2 { font-size: clamp(24px, 3.6vw, 38px); font-weight: 600; letter-spacing: -0.01em; max-width: 20ch; }
-  .outro p { margin-top: 16px; color: var(--muted); }
+  .foot-note { margin-top: 44px; font-size: 12px; color: var(--muted); letter-spacing: 0.06em; }
 
   @media (max-width: 640px) {
-    .icon-tile { width: 100px; }
-    .icon-tile .i-box { width: 60px; height: 60px; font-size: 26px; border-radius: 18px; }
+    .icon-row { gap: 26px; }
+    .icon-tile { width: 96px; }
+    .icon-tile .i-box { width: 56px; height: 56px; border-radius: 16px; }
+    .icon-tile .i-box svg { width: 26px; height: 26px; }
   }
 </style>
 </head>
 <body>
 
-<div class="intro">
-  <div>
-    <div class="kicker">Icon strip · Lisa's credentials</div>
-    <h1>Qualified, <em>registered.</em></h1>
-    <p>Craft's icon row, rebuilt for mum — her real accreditations as horizontal symbol tiles, drifting slowly. Swap the glyphs and labels in the strip below.</p>
-  </div>
-</div>
+<section class="section">
+  <div class="kicker">Qualified · Registered</div>
+  <h2>Trained, accredited and <em>registered.</em></h2>
 
-<section class="strip-wrap">
-  <div class="viewport" id="viewport">
-    <div class="track" id="track">
-      <!-- 5 real credentials from livewell credentials section — swap glyph/label/sub -->
-      <div class="icon-tile t1"><div class="i-box">🛡️</div><div class="i-label">UKIHCA Registered</div><div class="i-sub">Health Coach</div></div>
-      <div class="icon-tile t2"><div class="i-box">🎓</div><div class="i-label">Certified Coaching Pro</div><div class="i-sub">ICF Level 1</div></div>
-      <div class="icon-tile t3"><div class="i-box">🌍</div><div class="i-label">ICF Member</div><div class="i-sub">International Coaching Federation</div></div>
-      <div class="icon-tile t4"><div class="i-box">🩺</div><div class="i-label">Registered Nurse</div><div class="i-sub">NMC</div></div>
-      <div class="icon-tile t5"><div class="i-box">🏫</div><div class="i-label">NMC Registered Teacher</div><div class="i-sub">Teaching qualification</div></div>
-      <!-- duplicate set for the seamless loop -->
-      <div class="icon-tile t1"><div class="i-box">🛡️</div><div class="i-label">UKIHCA Registered</div><div class="i-sub">Health Coach</div></div>
-      <div class="icon-tile t2"><div class="i-box">🎓</div><div class="i-label">Certified Coaching Pro</div><div class="i-sub">ICF Level 1</div></div>
-      <div class="icon-tile t3"><div class="i-box">🌍</div><div class="i-label">ICF Member</div><div class="i-sub">International Coaching Federation</div></div>
-      <div class="icon-tile t4"><div class="i-box">🩺</div><div class="i-label">Registered Nurse</div><div class="i-sub">NMC</div></div>
-      <div class="icon-tile t5"><div class="i-box">🏫</div><div class="i-label">NMC Registered Teacher</div><div class="i-sub">Teaching qualification</div></div>
+  <div class="icon-row">
+    <!-- 1. UKIHCA Registered Health Coach -->
+    <div class="icon-tile t1">
+      <div class="i-box">
+        <svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.2-8 11-4.6-1.8-8-6-8-11V5l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg>
+      </div>
+      <div class="i-label">UKIHCA Registered</div>
+      <div class="i-sub">Health Coach</div>
+    </div>
+
+    <!-- 2. Certified Coaching Professional, ICF Level 1 -->
+    <div class="icon-tile t2">
+      <div class="i-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M9 14.5L7.5 21l4.5-2.2L16.5 21 15 14.5"/></svg>
+      </div>
+      <div class="i-label">Certified Coach</div>
+      <div class="i-sub">ICF Level 1 · CCP</div>
+    </div>
+
+    <!-- 3. ICF Member -->
+    <div class="icon-tile t3">
+      <div class="i-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>
+      </div>
+      <div class="i-label">ICF Member</div>
+      <div class="i-sub">International Coaching Federation</div>
+    </div>
+
+    <!-- 4. Registered Nurse (NMC) -->
+    <div class="icon-tile t4">
+      <div class="i-box">
+        <svg viewBox="0 0 24 24"><path d="M5 4h9v4M5 4v4M9.5 4v4"/><path d="M5 8h9"/><path d="M9.5 8v5M7 13h5"/><circle cx="17" cy="16.5" r="3.5"/><path d="M17 13v-1.5M17 20v1.5"/></svg>
+      </div>
+      <div class="i-label">Registered Nurse</div>
+      <div class="i-sub">NMC</div>
+    </div>
+
+    <!-- 5. NMC Registered Teacher -->
+    <div class="icon-tile t5">
+      <div class="i-box">
+        <svg viewBox="0 0 24 24"><path d="M12 4L2 9l10 5 10-5-10-5z"/><path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/><path d="M22 9v5"/></svg>
+      </div>
+      <div class="i-label">NMC Registered Teacher</div>
+      <div class="i-sub">Teaching qualification</div>
     </div>
   </div>
-  <div class="hint">
-    drifts on its own · drag to explore
-    <span class="arrows">
-      <button id="prevBtn" aria-label="Previous">←</button>
-      <button id="nextBtn" aria-label="Next">→</button>
-    </span>
-  </div>
+
+  <div class="foot-note">Registered Nurse · 20+ years NHS experience · Health &amp; Wellbeing Coach</div>
 </section>
 
-<div class="outro">
-  <div>
-    <h2>Five credentials, one quiet row. Trust shown, not told.</h2>
-    <p>Same 40px/s drift as the tiled carousel — transform-only, seamless, reduced-motion static.</p>
-  </div>
-</div>
-
-<script>
-(function () {
-  "use strict";
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  var track = document.getElementById("track");
-  var viewport = document.getElementById("viewport");
-  var tiles = [].slice.call(track.children);
-  var N = tiles.length;
-  var SET = N / 2;
-  var SPEED = 40;
-  var x = 0;
-  var setW = 0;
-  var drifting = !reduced;
-  var dragging = false;
-  var lastT = 0;
-
-  if (reduced) return;
-
-  function tick(now) {
-    if (!dragging && drifting) {
-      var dt = lastT ? (now - lastT) / 1000 : 0;
-      x -= SPEED * dt;
-      if (x <= -setW) x += setW;
-      if (x > 0) x -= setW;
-      track.style.transform = "translate3d(" + x + "px, 0, 0)";
-    }
-    lastT = now;
-    requestAnimationFrame(tick);
-  }
-
-  var startX = 0, startOffset = 0;
-  viewport.addEventListener("pointerdown", function (e) {
-    dragging = true; drifting = false;
-    startX = e.clientX; startOffset = x;
-    viewport.setPointerCapture(e.pointerId);
-  });
-  viewport.addEventListener("pointermove", function (e) {
-    if (!dragging) return;
-    x = startOffset + (e.clientX - startX);
-    if (x <= -setW) x += setW;
-    if (x > 0) x -= setW;
-    track.style.transform = "translate3d(" + x + "px, 0, 0)";
-  });
-  function endDrag() { dragging = false; drifting = true; }
-  viewport.addEventListener("pointerup", endDrag);
-  viewport.addEventListener("pointercancel", endDrag);
-
-  function skip(dir) {
-    x += dir * 176;  // tile + gap
-    if (x <= -setW) x += setW;
-    if (x > 0) x -= setW;
-    track.style.transform = "translate3d(" + x + "px, 0, 0)";
-  }
-  document.getElementById("nextBtn").addEventListener("click", function () { skip(-1); });
-  document.getElementById("prevBtn").addEventListener("click", function () { skip(1); });
-
-  function layout() {
-    var gap = 48;
-    var first = tiles[0].getBoundingClientRect();
-    setW = (first.width + gap) * SET;
-    track.style.flexWrap = "nowrap";
-    track.style.justifyContent = "flex-start";
-    track.style.padding = "0";
-    if (x < -setW) x %= setW;
-  }
-
-  window.addEventListener("resize", layout);
-  layout();
-  requestAnimationFrame(function (now) { lastT = now; requestAnimationFrame(tick); });
-})();
-</script>
 </body>
 </html>
