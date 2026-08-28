@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIVEWELL — Shell Motion Study</title>
+<style>
+  :root {
+    --bg: #0D0D0F;
+    --bg-soft: #17181C;
+    --panel: #212226;
+    --panel-2: #2A2B30;
+    --ink: #ECECEF;
+    --muted: #9A9AA3;
+    --faint: #5F5F68;
+    --accent: #E8631B;
+    --accent-2: #F4EDE2;
+    --line: rgba(255,255,255,0.08);
+    --spring: cubic-bezier(0.34, 1.3, 0.5, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ SPRING ENGINE ============ */
+  /* Every interactive motion in this shell runs through one physics language:
+     cubic-bezier(0.34, 1.3, 0.5, 1) = spring ~400/38, press scale 0.98. */
+
+  .app { display: flex; height: 100vh; }
+
+  /* ============ SIDEBAR ============ */
+  .sidebar {
+    width: 264px; flex-shrink: 0;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    padding: 10px;
+    position: relative; z-index: 2;
+  }
+  .new-chat {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 12px; border-radius: 10px;
+    border: 1px solid var(--line); background: transparent;
+    color: var(--ink); font-size: 14px; cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    will-change: transform;
+  }
+  .new-chat:hover { background: var(--panel); }
+  .new-chat:active { transform: scale(0.98); }
+  .new-chat .plus { font-size: 18px; color: var(--muted); }
+
+  .nav-group { margin-top: 18px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); padding: 0 12px 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    color: var(--ink); font-size: 14px; cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease;
+  }
+  .nav-item:hover { background: var(--panel); }
+  .nav-item.active { background: var(--panel); }
+  .nav-item .ico { width: 18px; text-align: center; color: var(--muted); }
+
+  .chat-list { margin-top: 6px; display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
+  .chat-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    color: var(--muted); font-size: 13.5px; cursor: pointer;
+    white-space: nowrap; overflow: hidden;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .chat-item:hover { background: var(--panel); color: var(--ink); }
+  .chat-item.active { background: var(--panel-2); color: var(--ink); }
+  .chat-item .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); flex-shrink: 0; }
+  .chat-item .name { overflow: hidden; text-overflow: ellipsis; }
+
+  .sidebar-foot { border-top: 1px solid var(--line); padding: 10px 6px 4px; }
+  .user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; transition: background 0.15s ease; }
+  .user-row:hover { background: var(--panel); }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #B84A12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;
+  }
+  .user-row .uname { font-size: 13px; line-height: 1.2; }
+  .user-row .uplan { font-size: 11px; color: var(--faint); }
+
+  /* ============ MAIN ============ */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+  .topbar {
+    height: 60px; display: flex; align-items: center; gap: 14px;
+    padding: 0 18px; border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .topbar .lb-logo { display: flex; align-items: center; gap: 10px; }
+  .topbar .lb-mark { width: 26px; height: 26px; border-radius: 7px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; }
+  .topbar .lb-name { font-size: 14px; font-weight: 500; letter-spacing: 0.14em; }
+  .topbar .lb-name em { color: var(--accent); font-style: normal; }
+  .topbar .tabs { display: flex; gap: 4px; margin-left: 26px; }
+  .tab {
+    padding: 7px 14px; border-radius: 999px; font-size: 13px; color: var(--muted);
+    cursor: pointer; border: 1px solid transparent;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .tab:hover { color: var(--ink); background: var(--panel); }
+  .tab.active { background: var(--panel-2); color: var(--ink); }
+
+  /* ============ CHAT ============ */
+  .chat { flex: 1; overflow-y: auto; scroll-behavior: smooth; padding: 28px 0 12px; }
+  .chat-inner { max-width: 760px; margin: 0 auto; padding: 0 22px; display: flex; flex-direction: column; gap: 26px; }
+
+  .msg { display: flex; gap: 14px; animation: msgIn 0.5s var(--spring) both; }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
+  .msg.assistant .msg-avatar { background: var(--accent); }
+  .msg-avatar {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    background: var(--panel-2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  }
+  .msg-body { padding-top: 4px; }
+  .msg-name { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .msg-text { font-size: 15px; line-height: 1.65; color: var(--ink); }
+  .msg-text .w { display: inline-block; opacity: 0; transform: translateY(8px); }
+  .msg-text.streaming .w { animation: wordRise 0.32s var(--spring) forwards; }
+  @keyframes wordRise { to { opacity: 1; transform: translateY(0); } }
+  .msg-text .callout {
+    display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 999px;
+    background: rgba(232,99,27,0.14); color: #FFB28A; font-size: 13px;
+  }
+
+  .typing { display: flex; gap: 5px; padding: 10px 0; }
+  .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); animation: blink 1.2s infinite ease-in-out; }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes blink { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+
+  /* ============ COMPOSER ============ */
+  .composer-wrap { padding: 8px 0 18px; flex-shrink: 0; position: relative; }
+  .composer {
+    max-width: 760px; margin: 0 auto; padding: 0 22px;
+    display: flex; align-items: flex-end; gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 12px 12px 12px 20px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
+  }
+  .composer:focus-within { border-color: rgba(232,99,27,0.5); box-shadow: 0 0 0 3px rgba(232,99,27,0.12); }
+  .composer input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--ink); font-size: 15px; padding: 6px 0; font-family: inherit;
+  }
+  .composer input::placeholder { color: var(--faint); }
+  .send {
+    width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+    background: var(--accent); color: #fff; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.25s var(--spring), background 0.2s ease, opacity 0.2s ease;
+    will-change: transform;
+  }
+  .send:active { transform: scale(0.9); }
+  .send:hover { background: #F07A38; }
+  .send[disabled] { opacity: 0.35; cursor: default; }
+  .composer-foot { max-width: 760px; margin: 8px auto 0; padding: 0 26px; font-size: 11px; color: var(--faint); text-align: center; }
+
+  /* ============ LOGIN OVERLAY ============ */
+  .login {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.5s ease;
+  }
+  .login.gone { opacity: 0; pointer-events: none; }
+  .login-card {
+    width: 340px; text-align: center;
+    transform-origin: center;
+    transition: transform 0.6s var(--spring), opacity 0.4s ease;
+  }
+  .login.gone .login-card { transform: scale(0.92); opacity: 0; }
+  .login .lb-big {
+    width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 18px;
+    background: linear-gradient(135deg, var(--accent), #B84A12);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 24px; font-weight: 700;
+    box-shadow: 0 18px 40px -12px rgba(232,99,27,0.5);
+  }
+  .login h1 { font-size: 22px; font-weight: 500; letter-spacing: 0.02em; }
+  .login h1 em { color: var(--accent); font-style: normal; }
+  .login p { margin-top: 8px; color: var(--muted); font-size: 14px; }
+  .login .btn {
+    margin-top: 26px; width: 100%; padding: 13px;
+    border-radius: 12px; border: none; cursor: pointer;
+    background: var(--accent); color: #fff; font-size: 15px; font-weight: 500;
+    transition: transform 0.25s var(--spring), background 0.2s ease;
+    will-change: transform;
+  }
+  .login .btn:active { transform: scale(0.98); }
+  .login .btn:hover { background: #F07A38; }
+  .login .skip { margin-top: 12px; font-size: 13px; color: var(--faint); cursor: pointer; background: none; border: none; }
+  .login .skip:hover { color: var(--muted); }
+
+  .fade-hint { position: fixed; bottom: 14px; right: 16px; font-size: 11px; color: var(--faint); z-index: 5; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="lb-big">LB</div>
+    <h1>LIVEWELL <em>Coaching</em></h1>
+    <p>One conversation at a time.</p>
+    <button class="btn" id="loginBtn">Sign in with Google</button>
+    <button class="skip" id="skipBtn">Skip for now →</button>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <button class="new-chat"><span class="plus">+</span> New conversation</button>
+    <div class="nav-group">Menu</div>
+    <nav>
+      <div class="nav-item active"><span class="ico">⌂</span> Home</div>
+      <div class="nav-item"><span class="ico">✎</span> Sessions</div>
+      <div class="nav-item"><span class="ico">◷</span> Journal</div>
+      <div class="nav-item"><span class="ico">⚙</span> Settings</div>
+    </nav>
+    <div class="nav-group">Recent</div>
+    <div class="chat-list">
+      <div class="chat-item"><span class="dot"></span><span class="name">Intro call prep</span></div>
+      <div class="chat-item"><span class="dot"></span><span class="name">Goal setting — Q3</span></div>
+      <div class="chat-item"><span class="dot"></span><span class="name">Confidence &amp; boundaries</span></div>
+      <div class="chat-item"><span class="dot"></span><span class="name">Weekly check-in</span></div>
+      <div class="chat-item"><span class="dot"></span><span class="name">Career direction</span></div>
+    </div>
+    <div class="sidebar-foot">
+      <div class="user-row">
+        <div class="avatar">N</div>
+        <div><div class="uname">Nathan</div><div class="uplan">Free plan</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="lb-logo"><div class="lb-mark">LB</div><div class="lb-name">LIVE<em>WELL</em></div></div>
+      <div class="tabs">
+        <div class="tab active">Home</div>
+        <div class="tab">Sessions</div>
+        <div class="tab">Journal</div>
+        <div class="tab">Resources</div>
+      </div>
+    </div>
+
+    <div class="chat" id="chat">
+      <div class="chat-inner">
+        <div class="msg assistant">
+          <div class="msg-avatar">LB</div>
+          <div class="msg-body">
+            <div class="msg-name">LIVEWELL</div>
+            <div class="msg-text streaming" data-stream>Hi Nathan — what's on your mind today? No fluff, no fads, just a conversation that goes somewhere.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="composer-wrap">
+      <div class="composer">
+        <input id="composerInput" type="text" placeholder="Message Livewell…">
+        <button class="send" id="sendBtn" disabled>↑</button>
+      </div>
+      <div class="composer-foot">Confidential · 1:1 online · Built around you</div>
+    </div>
+  </div>
+</div>
+
+<div class="fade-hint">springs: 400/38 · press 0.98 · drawer flush</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ LOGIN → APP (spring out) ============ */
+  var login = document.getElementById("login");
+  function enterApp() {
+    login.classList.add("gone");
+    setTimeout(function () { login.style.display = "none"; }, 700);
+  }
+  document.getElementById("loginBtn").addEventListener("click", enterApp);
+  document.getElementById("skipBtn").addEventListener("click", enterApp);
+
+  /* ============ WORD-STREAM (ChatGPT-style reveal) ============ */
+  var streamEls = document.querySelectorAll(".msg-text.streaming");
+  function streamWords(el, delay) {
+    var text = el.textContent.trim();
+    var words = text.split(/\s+/);
+    el.textContent = "";
+    words.forEach(function (w) {
+      var s = document.createElement("span");
+      s.className = "w";
+      s.textContent = w + " ";
+      el.appendChild(s);
+    });
+    var spans = el.querySelectorAll(".w");
+    el.classList.add("streaming");
+    spans.forEach(function (s, i) {
+      s.style.animationDelay = (delay + i * 0.028) + "s";
+    });
+  }
+  streamEls.forEach(function (el, i) { streamWords(el, 0.6 + i * 0.3); });
+
+  /* ============ COMPOSER ============ */
+  var input = document.getElementById("composerInput");
+  var sendBtn = document.getElementById("sendBtn");
+  var chatInner = document.querySelector(".chat-inner");
+  var chat = document.getElementById("chat");
+  var respIdx = 0;
+
+  var responses = [
+    "What would a win this week look like — something small enough to actually do?",
+    "Let's slow that down. What's the feeling under the urgency?",
+    "Good. Now say it like a boundary, not a request.",
+    "If you knew you couldn't fail, what would you try this month?",
+    "That's the real conversation. Let's sit with it a beat longer.",
+  ];
+
+  input.addEventListener("input", function () { sendBtn.disabled = !input.value.trim(); });
+
+  function addMsg(text, isUser) {
+    var msg = document.createElement("div");
+    msg.className = "msg" + (isUser ? "" : " assistant");
+    msg.innerHTML = '<div class="msg-avatar">' + (isUser ? "N" : "LB") + '</div>' +
+      '<div class="msg-body"><div class="msg-name">' + (isUser ? "Nathan" : "LIVEWELL") + '</div>' +
+      '<div class="msg-text streaming">' + text + '</div></div>';
+    chatInner.appendChild(msg);
+    var t = msg.querySelector(".msg-text");
+    streamWords(t, 0.15);
+    // scroll the new message into view, smooth
+    setTimeout(function () {
+      msg.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 120);
+    return msg;
+  }
+
+  function send() {
+    var text = input.value.trim();
+    if (!text) return;
+    addMsg(text, true);
+    input.value = "";
+    sendBtn.disabled = true;
+    // typing indicator
+    var ty = document.createElement("div");
+    ty.className = "typing";
+    ty.innerHTML = "<span></span><span></span><span></span>";
+    chatInner.appendChild(ty);
+    ty.scrollIntoView({ behavior: "smooth", block: "end" });
+    setTimeout(function () {
+      ty.remove();
+      addMsg(responses[respIdx % responses.length], false);
+      respIdx++;
+    }, 900 + Math.random() * 500);
+  }
+  sendBtn.addEventListener("click", send);
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") send(); });
+
+  /* ============ TABS & NAV (active swap with bg wash) ============ */
+  var tabs = document.querySelectorAll(".tab");
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () {
+      tabs.forEach(function (x) { x.classList.remove("active"); });
+      t.classList.add("active");
+    });
+  });
+  var navItems = document.querySelectorAll(".nav-item");
+  navItems.forEach(function (n) {
+    n.addEventListener("click", function () {
+      navItems.forEach(function (x) { x.classList.remove("active"); });
+      n.classList.add("active");
+    });
+  });
+})();
+</script>
+</body>
+</html>
